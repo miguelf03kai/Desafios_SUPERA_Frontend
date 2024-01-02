@@ -4,28 +4,32 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Conversao from "../Utils/Conversao";
 import Validacao from "../Utils/Validacao";
+import Conta from "./Conta";
 
 const TransferenciaConsulta = () => {
 
     const [page, setPage] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
-    const [data,setData] = useState({
+    const [data, setData] = useState({
                                     startDate: "",
                                     endDate: "",
-                                    operador: ""
+                                    operador: "",
+                                    conta: ""
                                     })
     const [startDateError, setStartDateError] = useState(false);
     const [endDateError, setEndDateError] = useState(false);
     const [items, setItems] = useState([]);
     const limit = 4;
-  
-    const fetchData = async (page, startDate, endDate, operador) => {
+
+    
+
+    const fetchData = async (page, startDate, endDate, operador, conta) => {
         const response = await fetch(
             `${Api}/transferencia/periodo?dataInicio=${Conversao.convertToISODate(startDate)
                                            }&dataFim=${Conversao.convertToISODate(endDate)
                                            }&operador=${operador
                                            }&page=${page
-                                           }&size=${limit}`);
+                                           }&size=${limit}&contaId=${conta}`);
         const dataJson = await response.json();
         const totalCount = parseInt(response.headers.get("X-Total-Count"));
         setTotalCount(totalCount);
@@ -33,7 +37,7 @@ const TransferenciaConsulta = () => {
     };
   
     useEffect(() => {
-        fetchData(page, data.startDate, data.endDate, data.operador);
+        fetchData(page, data.startDate, data.endDate, data.operador, data.conta);
     }, [page]);
   
     const handlePageChange = (event, value) => {
@@ -81,7 +85,7 @@ const TransferenciaConsulta = () => {
     const handleSubmit = async (event) => {
       event.preventDefault();
       setPage(0);
-      fetchData(page, data.startDate, data.endDate, data.operador);
+      fetchData(page, data.startDate, data.endDate, data.operador, data.conta);
     }
 
     // retorna nome dos tipos de movimentações
@@ -97,6 +101,10 @@ const TransferenciaConsulta = () => {
               return '';
         }
     }
+
+    const handleContaChange = (value) => {
+      setData({ ...data, conta: value });
+    };
   
     return (
         <div className="container" style={{marginTop: "2%"}}>
@@ -104,7 +112,10 @@ const TransferenciaConsulta = () => {
             <div>
               <form onSubmit={handleSubmit}>
                   <div className="form-row align-items-center d-flex justify-content-between">
-                        <div className="form-group col-3">
+                        <div className="form-group col-2">
+                          <Conta onContaChange={handleContaChange} />
+                        </div>
+                        <div className="form-group col-2">
                           <label>Data Inicio</label>
                           <input className={`form-control ${startDateError ? "is-invalid" : ""}`} 
                                   name="startDate" 
@@ -113,7 +124,7 @@ const TransferenciaConsulta = () => {
                                   placeholder="dd/mm/yyyy" 
                                   maxLength={10}/>
                         </div>
-                        <div className="form-group col-3">
+                        <div className="form-group col-2">
                           <label>Data Fim</label>
                           <input className={`form-control ${endDateError ? "is-invalid" : ""}`} 
                                   name="endDate" 
@@ -148,6 +159,7 @@ const TransferenciaConsulta = () => {
                         <th>Valentia</th>
                         <th>Tipo</th>
                         <th>Nome Operador Transacionado</th>
+                        <th>N° Conta</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -157,6 +169,7 @@ const TransferenciaConsulta = () => {
                               <td>{Conversao.currencyFormat(item.valor)}</td>
                               <td>{renderSwitch(item.tipo,item.valor)}</td>
                               <td>{item.nomeOperadorTransacao}</td>
+                              <td>{item.conta.idConta}</td>
                           </tr>
                       ))}
                     </tbody>
